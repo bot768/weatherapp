@@ -94,3 +94,8 @@ button:hover {
     color: #fff;
     margin-top: 10px;
 }
+.language-switcher button{
+    width: 100px;
+    padding: 10px;
+    box-sizing: border-box;
+}

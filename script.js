@@ -26,6 +26,7 @@ let currentLanguage = 'zh';
 }
 function updateUIText() {
     const langText = translations[currentLanguage];
+    document.title = langText.title;
     document.getElementById('app-title').textContent = langText.title;
     document.getElementById('city').placeholder= langText.placeholder;
     document.getElementById('search-btn').textContent = langText.searchBtn;
