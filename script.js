@@ -1,35 +1,125 @@
-function getWeather() {
-    const apiKey = 'd2e1741a702fa6f7be95ea9126bd5667';
-    const city = document.getElementById('city').value;
+const translations = {
+    'en': {
+       title: 'Weather App',
+       placeholder: 'Enter city name',
+       searchBtn: 'Search',
+       errorMsg: 'please enter a city',
+       notFound: 'City not found',
+       currentWeather: 'Current Weather',
+       hourlyForecast: 'Hourly Forecast',
 
-    if (!city) {
-        alert('Please enter a city');
+    },
+    zh: {
+       title: '天气应用',
+       placeholder: '请输入城市名称',
+       searchBtn: '搜索',
+       errorMsg: '请输入城市名称',
+       notFound: '城市未找到',
+       currentWeather: '当前天气',
+       hourlyForecast: '小时预报'
+    }
+}
+let currentLanguage = 'zh';
+ function changeLanguage(language) {
+    currentLanguage = language;
+    updateUIText();
+}
+function updateUIText() {
+    const langText = translations[currentLanguage];
+    document.getElementById('app-title').textContent = langText.title;
+    document.getElementById('city').placeholder= langText.placeholder;
+    document.getElementById('search-btn').textContent = langText.searchBtn;
+}
+async function getWeather() {
+    const apiKey = 'd2e1741a702fa6f7be95ea9126bd5667';
+    const cityInput = document.getElementById('city').value.trim();
+    if (!cityInput) {
+        alert(translations[currentLanguage].errorMsg);
         return;
     }
 
-    const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}`;
+try 
+{
+   let cityName = cityInput;
+   if(/[\u4e00-\u9fa5]/.test(cityInput)) {
+       cityName = await convertChineseToPinyin(cityInput);
+   }
+   const[currentData, forecastData] = await Promise.all([
 
-    fetch(currentWeatherUrl)
-        .then(response => response.json())
-        .then(data => {
-            displayWeather(data);
-        })
-        .catch(error => {
-            console.error('Error fetching current weather data:', error);
-           
-        });
+       fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}`).then(res=> res.json()),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${apiKey}&cnt=8`)
+        .then(res=> res.json())
+        
+    ]);
+        if(currentData.cod === '404') {
+           displayError(translations[currentLanguage].notFound);
+           return;
+        }
+        displayWeather(currentData);
+        displayHourlyForecast(forecastData.list);
 
-    fetch(forecastUrl)
-        .then(response => response.json())
-        .then(data => {
-            displayHourlyForecast(data.list);
-        })
-        .catch(error => {
-            console.error('Error fetching hourly forecast data:', error);
-           
-        });
+} catch (error) {
+    console.error('Error:', error);
+    displayError('获取天气信息失败');
 }
+}
+async function convertChineseToPinyin(cityName) {
+   const cityMap = {
+
+       '北京': 'beijing',
+       '上海': 'shanghai',
+       '广州': 'guangzhou',
+       '深圳': 'shenzhen',
+       '杭州': 'hangzhou',
+       '成都': 'chengdu',
+       '南京': 'nanjing',
+       '武汉': 'wuhan',
+       '西安': 'xian',
+       '厦门': 'xiamen',
+       '苏州': 'suzhou',
+       '天津': 'tianjin',
+       '重庆': 'chongqing',
+       '郑州': 'zhengzhou',
+       '沈阳': 'shenyang',
+       '济南': 'jinan',
+       '昆明': 'kunming',
+       '长沙': 'changsha',
+       '福州': 'fuzhou',
+       '哈尔滨': 'haerbin',
+       '合肥': 'hefei',
+       '石家庄': 'shijiazhuang',
+       '南昌': 'nanchang',
+       '贵阳': 'guiyang',
+       '南宁': 'nanning',
+       '呼和浩特': 'huhehaote',
+       '兰州': 'lanzhou',
+       '太原': 'taiyuan',
+       '西宁': 'xining',
+       '银川': 'yinchuan',
+       '乌鲁木齐': 'wulumuqi',
+       '拉萨': 'lasa',
+       '西宁': 'xining',
+       '长春': 'changchun',
+       '贵阳': 'guiyang',
+       '南宁': 'nanning',
+       '香港': 'xianggang',
+       '澳门': 'aomen',
+       '台北': 'taipei',
+       '高雄': 'kaohsiung',
+       '台北': 'taipei',
+       '台中': 'zhongshan',
+       '台南': 'tansan',
+       "青岛":"qingdao",
+       '宁波': 'ningbo',
+       '绍兴': 'shaoxing',
+       '杭州': 'hangzhou',
+       '济宁': 'jining',
+       
+         }
+   return cityMap[cityName] || cityName;
+}
+updateUIText();
+
 
 function displayWeather(data) {
     const tempDivInfo = document.getElementById('temp-div');
@@ -51,14 +141,9 @@ function displayWeather(data) {
         const iconCode = data.weather[0].icon;
         const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
 
-        const temperatureHTML = `
-            <p>${temperature}°C</p>
-        `;
+        const temperatureHTML = `<p>${temperature}°C</p>`;
 
-        const weatherHtml = `
-            <p>${cityName}</p>
-            <p>${description}</p>
-        `;
+        const weatherHtml = `<p>${cityName}</p> <p>${description}</p>`;
 
         tempDivInfo.innerHTML = temperatureHTML;
         weatherInfoDiv.innerHTML = weatherHtml;
@@ -81,13 +166,7 @@ function displayHourlyForecast(hourlyData) {
         const iconCode = item.weather[0].icon;
         const iconUrl = `https://openweathermap.org/img/wn/${iconCode}.png`;
 
-        const hourlyItemHtml = `
-            <div class="hourly-item">
-                <span>${hour}:00</span>
-                <img src="${iconUrl}" alt="Hourly Weather Icon">
-                <span>${temperature}°C</span>
-            </div>
-        `;
+        const hourlyItemHtml = `<div class="hourly-item"><span>${hour}:00</span><img src="${iconUrl}" alt="Hourly Weather Icon"><span>${temperature}°C</span></div>`;
 
         hourlyForecastDiv.innerHTML += hourlyItemHtml;
     });
