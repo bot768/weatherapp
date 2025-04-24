@@ -98,4 +98,15 @@ button:hover {
     width: 100px;
     padding: 10px;
     box-sizing: border-box;
+    background: #debff4;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 15px;
+}
+
+.language-switcher button:hover{
+    background:#8b48d7
 }
